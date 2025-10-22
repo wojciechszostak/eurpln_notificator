@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}EUR/PLN{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="wrap">
+    <h1>EUR/PLN – szybki podgląd kursu</h1>
+  </header>
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="wrap foot">
+    <small>
+      Źródło: Investing.com • Auto-refresh 5 s •
+      Auto-notyfikacja: <em>gdy kurs &lt; otwarcie</em> (ntfy)
+    </small>
+  </footer>
+</body>
+</html>

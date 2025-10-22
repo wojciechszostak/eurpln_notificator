@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}EUR/PLN – podgląd{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="row">
+      <div>
+        <div class="label">Kurs</div>
+        <div class="value" id="kurs">–</div>
+      </div>
+      <div>
+        <div class="label">Zmiana</div>
+        <div class="value" id="zmiana">–</div>
+      </div>
+      <div>
+        <div class="label">Otwarcie</div>
+        <div class="value" id="kurs_otwarcia">–</div>
+      </div>
+    </div>
+
+    <div class="timestamp" id="timestamp"></div>
+
+    <div class="actions">
+      <button id="notifyBtn" class="btn">Wyślij notyfikację do ntfy</button>
+      <span id="notifyMsg" class="msg"></span>
+    </div>
+  </div>
+
+  <script>
+    async function fetchData() {
+      try {
+        const response = await fetch("/api/data");
+        const data = await response.json();
+        if (data.error) {
+          console.error(data.error);
+          document.getElementById("timestamp").textContent = "Błąd pobierania danych";
+          return;
+        }
+        document.getElementById("kurs").textContent = data.kurs;
+        document.getElementById("zmiana").textContent = `${data.zmiana} (${data.zmiana_pct})`;
+        document.getElementById("kurs_otwarcia").textContent = data.kurs_otwarcia;
+        document.getElementById("timestamp").textContent = `Ostatnia aktualizacja: ${data.timestamp}`;
+      } catch (err) {
+        console.error("Błąd pobierania danych:", err);
+      }
+    }
+
+    async function sendNotification() {
+      const btn = document.getElementById("notifyBtn");
+      const msg = document.getElementById("notifyMsg");
+      btn.disabled = true;
+      msg.textContent = "Wysyłam...";
+      try {
+        const resp = await fetch("/notify", { method: "POST" });
+        const data = await resp.json();
+        if (data.ok) {
+          msg.textContent = "✅ Wysłano na ntfy";
+        } else {
+          msg.textContent = "❌ Błąd wysyłki: " + (data.error || "nieznany błąd");
+        }
+      } catch (e) {
+        msg.textContent = "❌ Błąd sieci";
+      } finally {
+        setTimeout(() => { msg.textContent = ""; btn.disabled = false; }, 2000);
+      }
+    }
+
+    // Auto-odświeżanie UI co 5 s (niezależnie od serwerowego pollingu / alertów)
+    fetchData();
+    setInterval(fetchData, 5000);
+
+    // Ręczna wysyłka snapshotu do ntfy
+    document.getElementById("notifyBtn").addEventListener("click", sendNotification);
+  </script>
+{% endblock %}
